@@ -148,10 +148,10 @@
       background-color: var(--udea-dark);
     }
 
-    /* Estilos de la Retroalimentación Adaptativa */
+    /* Estilos del Informe de Retroalimentación en la misma página */
     #resultado-seccion {
       display: none;
-      margin-top: 30px;
+      margin-top: 20px;
     }
 
     .card-resultado {
@@ -193,7 +193,7 @@
 
   <div class="info-card">
     <h3>Mapa de Competencias Semióticas</h3>
-    <p><strong>Propósito:</strong> Identificar fortalezas, debilidades y necesidades de aprendizaje al inicio del semestre y medir su progreso al finalizar el curso. Este instrumento evalúa la comprensión de signos, procesos de significación, análisis de medios e identificación de ideologías en la cultura.</p>
+    <p><strong>Propósito:</strong> Identificar fortalezas, debilidades y necesidades de aprendizaje al inicio del semestre y medir su progreso al finalizar el curso.</p>
   </div>
 
   <form id="semioticaForm">
@@ -313,7 +313,7 @@
 
       <div class="pregunta">
         <p>5. Producción escrita (Aproximadamente 100 palabras):</p>
-        <p style="font-weight: normal; font-style: italic;">Una persona viste una bata blanca durante una entrevista televisiva. Explique qué significados podrían construir diferentes audiencias a partir de esta imagen. Diferencie entre lo observable directamente y los significados culturales asociados.</p>
+        <p style="font-weight: normal; font-style: italic;">Una persona viste una bata blanca durante una entrevista televisiva. Explique qué significados podrían construir diferentes audiencias a partir de esta imagen.</p>
         <textarea id="B5" rows="4" required placeholder="Escriba aquí su respuesta..."></textarea>
       </div>
     </div>
@@ -321,10 +321,10 @@
     <!-- BLOQUE C -->
     <div class="bloque">
       <h2 class="bloque-title">BLOQUE C. Medios de Comunicación y Cultura de Masas</h2>
-      <div class="indicador">Indicador: Analiza mensajes mediáticos y reconoce cómo los medios construyen significados y representaciones culturales.</div>
+      <div class="indicador">Indicador: Analiza mensajes mediáticos y reconoce cómo los medios construyen significados.</div>
 
       <div style="margin-bottom: 20px;">
-        <p><strong>Material de análisis:</strong> Observe el siguiente video antes de responder las preguntas 1 y 2.</p>
+        <p><strong>Material de análisis:</strong> Observe el video antes de responder las preguntas 1 y 2.</p>
         <div class="video-container">
           <iframe src="https://www.youtube.com/embed/Sg9mYVipH-U" title="Dove Real Beauty Sketches" frameborder="0" allowfullscreen></iframe>
         </div>
@@ -436,11 +436,11 @@
     <button type="submit" class="btn-submit" id="btnSubmit">Finalizar y Enviar Evaluación</button>
   </form>
 
-  <!-- RESULTADOS Y RETROALIMENTACIÓN ADAPTATIVA -->
+  <!-- SECCIÓN DE RETROALIMENTACIÓN ADAPTATIVA EN LA MISMA PÁGINA -->
   <div id="resultado-seccion">
     <h2>Informe Adaptativo de Desempeño</h2>
-    <p>A continuación se presenta el diagnóstico detallado por cada bloque de competencia, junto con tu ruta de aprendizaje asignada:</p>
-    
+    <p>A continuación se presenta el diagnóstico detallado de tus respuestas por cada bloque de competencia, junto con la ruta de aprendizaje que te fue asignada:</p>
+
     <div id="res-bloque-a" class="card-resultado"></div>
     <div id="res-bloque-b" class="card-resultado"></div>
     <div id="res-bloque-c" class="card-resultado"></div>
@@ -452,22 +452,22 @@
   // CONFIGURACIÓN DE SUPABASE
   const SUPABASE_URL = "https://bcstmyhadbnysphlernb.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_2xj9zkSLzDcbh_JT8n9khw_ifXu9Uea";
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // CLAVE DE RESPUESTAS CORRECTAS
   const CLAVES = {
     A: { 1: 'C', 2: 'B', 3: 'A', 4: 'C', 5: 'A' },
-    B: { 1: 'C', 2: 'B', 3: 'C', 4: 'B' }, // B5 es producción escrita
+    B: { 1: 'C', 2: 'B', 3: 'C', 4: 'B' }, 
     C: { 1: 'B', 2: 'C', 3: 'C', 4: 'B', 5: 'B' },
-    D: { 2: 'B', 3: 'B', 4: 'C', 5: 'B' }  // D1 es producción escrita
+    D: { 2: 'B', 3: 'B', 4: 'C', 5: 'B' }
   };
 
   document.getElementById('semioticaForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     document.getElementById('btnSubmit').disabled = true;
-    document.getElementById('btnSubmit').innerText = "Procesando...";
+    document.getElementById('btnSubmit').innerText = "Procesando respuestas...";
 
-    // 1. Recopilación de datos
+    // 1. Recopilación de respuestas
     const nombre = document.getElementById('nombre').value;
     const correo = document.getElementById('correo').value;
 
@@ -484,26 +484,22 @@
       1: document.getElementById('D1').value, 2: getRadio('D2'), 3: getRadio('D3'), 4: getRadio('D4'), 5: getRadio('D5')
     };
 
-    // 2. Cálculo de puntajes por Bloque (Base 100)
+    // 2. Cálculo de Puntajes por Bloque (Base 100)
     let pA = 0, pB = 0, pC = 0, pD = 0;
 
-    // Bloque A (5 preguntas = 20 pts c/u)
     for (let i = 1; i <= 5; i++) if (respA[i] === CLAVES.A[i]) pA += 20;
 
-    // Bloque B (4 preguntas op. múltiple = 20 pts c/u, producción escrita B5 asigna 20 pts por completitud en el diagnóstico)
     for (let i = 1; i <= 4; i++) if (respB[i] === CLAVES.B[i]) pB += 20;
     if (respB[5].trim().length > 30) pB += 20;
 
-    // Bloque C (5 preguntas = 20 pts c/u)
     for (let i = 1; i <= 5; i++) if (respC[i] === CLAVES.C[i]) pC += 20;
 
-    // Bloque D (4 preguntas op. múltiple = 20 pts c/u, producción escrita D1 asigna 20 pts por completitud)
     for (let i = 2; i <= 5; i++) if (respD[i] === CLAVES.D[i]) pD += 20;
     if (respD[1].trim().length > 50) pD += 20;
 
     const pGlobal = (pA + pB + pC + pD) / 4;
 
-    // 3. Determinar niveles
+    // 3. Determinar Niveles
     const getNivel = (pts) => {
       if (pts < 50) return "Inicial";
       if (pts < 70) return "Básico";
@@ -516,7 +512,7 @@
     const nC = getNivel(pC);
     const nD = getNivel(pD);
 
-    // 4. Lógica de Retroalimentación Adaptativa y Error Específico
+    // 4. Lógica de Retroalimentación Adaptativa
     const evalA = diagnosticarBloqueA(respA, pA, nA);
     const evalB = diagnosticarBloqueB(respB, pB, nB);
     const evalC = diagnosticarBloqueC(respC, pC, nC);
@@ -524,7 +520,7 @@
 
     // 5. Guardar en Supabase
     try {
-      const { error } = await supabase.from('respuestas_semiotica').insert([{
+      const { error } = await supabaseClient.from('respuestas_semiotica').insert([{
         nombre, correo,
         respuestas_bloque_a: respA, respuestas_bloque_b: respB,
         respuestas_bloque_c: respC, respuestas_bloque_d: respD,
@@ -539,10 +535,10 @@
 
       if (error) console.error("Error al guardar en Supabase:", error);
     } catch (err) {
-      console.error("Excepción al conectar con Supabase:", err);
+      console.error("Excepción en Supabase:", err);
     }
 
-    // 6. Desplegar resultados
+    // 6. Ocultar Formulario y Renderizar Resultados en la Misma Página
     document.getElementById('semioticaForm').style.display = 'none';
     const secRes = document.getElementById('resultado-seccion');
     secRes.style.display = 'block';
@@ -551,6 +547,8 @@
     renderCard('res-bloque-b', 'Bloque B: Producción de Sentido', pB, nB, evalB);
     renderCard('res-bloque-c', 'Bloque C: Medios y Cultura de Masas', pC, nC, evalC);
     renderCard('res-bloque-d', 'Bloque D: Ideología, Mito y Cultura', pD, nD, evalD);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
   function getRadio(name) {
@@ -558,7 +556,7 @@
     return el ? el.value : '';
   }
 
-  // --- LÓGICA DE DIAGNÓSTICO ADAPTATIVO POR BLOQUE ---
+  // DIAGNÓSTICOS POR BLOQUE
 
   function diagnosticarBloqueA(resp, pts, nivel) {
     if (pts >= 85) return {
@@ -569,19 +567,19 @@
     };
     if (resp[1] !== 'C' || resp[4] !== 'C') return {
       error: "Confusión entre Icono y Símbolo",
-      retro: "Reconoces que ambos representan algo, pero el icono guarda una semejanza física con su objeto, mientras que el símbolo depende enteramente de acuerdos culturales.",
+      retro: "Reconoces que ambos representan algo, pero el icono guarda una semejanza física con su objeto, mientras que el símbolo depende de acuerdos culturales.",
       ruta: "Ruta Roja (Refuerzo focalizado)",
       actividad: "Taller adaptativo: Clasificación interactiva entre fotografías, mapas, banderas y logotipos."
     };
     if (resp[2] !== 'B' || resp[3] !== 'A') return {
       error: "Confusión entre Indicio y Señal",
-      retro: "Los indicios permiten inferir información a partir de un rastro natural o causal; las señales son artefactos creados intencionalmente para normar o comunicar.",
+      retro: "Los indicios permiten inferir información a partir de un rastro natural; las señales son artefactos creados intencionalmente para normar o comunicar.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
-      actividad: "Análisis de casos: Diferenciación de huellas, síntomas médicos y señales de tránsito en contextos cotidianos."
+      actividad: "Análisis de casos: Diferenciación de huellas, síntomas médicos y señales de tránsito."
     };
     return {
       error: "Confusión entre Síntoma e Indicio",
-      retro: "Los síntomas evidencian estados internos o biológicos del organismo; los indicios son evidencias externas que permiten inferir una causa.",
+      retro: "Los síntomas evidencian estados internos u orgánicos; los indicios son evidencias externas que permiten inferir una causa.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
       actividad: "Ejercicios de observación y explicación de relaciones causales."
     };
@@ -592,25 +590,25 @@
       error: "Desempeño Alto",
       retro: "Comprendes a cabalidad cómo se articula la producción de sentido en múltiples niveles.",
       ruta: "Ruta Azul (Profundización)",
-      actividad: "Analizar las variaciones en la interpretación cultural de un mismo símbolo en distintos contextos geográficos e históricos."
+      actividad: "Analizar las variaciones en la interpretación cultural de un mismo símbolo en distintos contextos geográficos."
     };
     if (resp[1] !== 'C' || resp[2] !== 'B') return {
       error: "Confusión entre Denotación y Connotación",
-      retro: "Describes correctamente los elementos literales observables (denotación), pero requieres reforzar la identificación de los significados culturales asociados (connotación).",
+      retro: "Describes correctamente los elementos literales observables (denotación), pero requieres reforzar la identificación de significados culturales (connotación).",
       ruta: "Ruta Roja (Refuerzo focalizado)",
       actividad: "Análisis guiado de anuncios publicitarios separando el significado literal del significado cultural implícito."
     };
     if (resp[3] !== 'C' || resp[4] !== 'B') return {
       error: "Confusión entre Codificación y Decodificación",
-      retro: "La codificación es el proceso donde el emisor construye el mensaje mediante un código; la decodificación es la interpretación por parte de la audiencia.",
+      retro: "La codificación ocurre cuando se construye el mensaje con un código; la decodificación cuando la audiencia lo interpreta.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
       actividad: "Ejercicio práctico: Elaboración de un mensaje encriptado y decodificación entre pares."
     };
     return {
       error: "Escritura centrada en opiniones personales",
-      retro: "Identificas tu perspectiva personal, pero falta fundamentar los significados en convenciones culturales e institucionales compartidas.",
+      retro: "Identificas tu perspectiva personal, pero falta fundamentar los significados en convenciones culturales compartidas.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
-      actividad: "Taller de comparación de lecturas de un mismo signo entre diferentes grupos poblacionales."
+      actividad: "Taller de comparación de lecturas de un mismo signo entre diferentes grupos."
     };
   }
 
@@ -623,19 +621,19 @@
     };
     if (resp[1] !== 'B' || resp[2] !== 'C') return {
       error: "Descripción superficial sin interpretación",
-      retro: "Identificas los hechos que ocurren en el mensaje mediático, pero aún no explicas la intención comunicativa ni las estrategias emocionales utilizadas.",
+      retro: "Identificas los hechos que ocurren en el mensaje mediático, pero aún no explicas la intención comunicativa ni la estrategia emocional.",
       ruta: "Ruta Roja (Refuerzo focalizado)",
-      actividad: "Guía paso a paso para desglosar el mensaje central, la audiencia objetivo y los recursos expresivos en la publicidad."
+      actividad: "Guía paso a paso para desglosar el mensaje central, la audiencia objetivo y los recursos expresivos."
     };
     if (resp[3] !== 'C' || resp[4] !== 'B') return {
       error: "Falta de diferenciación entre medios tradicionales y digitales",
-      retro: "Aún no distingues con claridad la dinámica industrial y editorial de la televisión frente a la naturaleza participativa y modificable de los memes.",
+      retro: "Aún no distingues la dinámica industrial de la televisión frente a la naturaleza participativa y modificable de los memes.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
       actividad: "Matriz comparativa estructurada entre la emisión de un noticiero y la viralización de un meme."
     };
     return {
       error: "Omisión del contexto cultural de la audiencia",
-      retro: "La interpretación de los mensajes no es absoluta; depende de las referencias, el contexto y el conocimiento compartido por la comunidad.",
+      retro: "La interpretación de los mensajes depende de las referencias, el contexto y el conocimiento compartido por la comunidad.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
       actividad: "Taller grupal: Interpretación de un mismo contenido digital por audiencias de distintas generaciones."
     };
@@ -650,19 +648,19 @@
     };
     if (resp[2] !== 'B' && resp[3] !== 'B') return {
       error: "Dificultad para identificar ideologías en discursos cotidianos",
-      retro: "Las ideologías no siempre se presentan como doctrinas explícitas; suelen articularse como ideas 'naturales' o de 'sentido común'.",
+      retro: "Las ideologías no siempre se presentan explícitamente; suelen articularse como ideas de 'sentido común'.",
       ruta: "Ruta Roja (Refuerzo focalizado)",
-      actividad: "Ejercicio de rastreo de valores implícitos en publicaciones y publicaciones de influencers en redes sociales."
+      actividad: "Ejercicio de rastreo de valores implícitos en publicaciones de redes sociales."
     };
     if (resp[4] !== 'C' || resp[5] !== 'B') return {
       error: "Confusión entre Hechos Verificables y Creencias Ideológicas",
-      retro: "Un hecho describe un fenómeno empírico o científico; una ideología expresa un sistema de valores sobre cómo debe ser interpretado el mundo.",
+      retro: "Un hecho describe un fenómeno empírico; una ideología expresa un sistema de valores sobre cómo debe ser interpretado el mundo.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
       actividad: "Taller de clasificación entre enunciados científicos, juicios de valor y discursos ideológicos."
     };
     return {
       error: "Confusión entre Mito y Mentira",
-      retro: "En semiótica, el mito no significa falsedad, sino una construcción narrativa que simplifica y naturaliza conceptos culturales complejas.",
+      retro: "En semiótica, el mito no significa falsedad, sino una construcción narrativa que naturaliza conceptos culturales complejos.",
       ruta: "Ruta Amarilla (Consolidación guiada)",
       actividad: "Análisis de relatos publicitarios modernos que apelan al mito del éxito individual."
     };
