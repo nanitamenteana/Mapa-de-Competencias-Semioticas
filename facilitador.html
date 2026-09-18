@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel del Facilitador - Semiótica UdeA</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      background-color: #006633;
+      color: white;
+      padding: 20px;
+      border-radius: 6px;
+      margin-bottom: 25px;
+    }
+
+    header h1 { margin: 0 0 5px 0; font-size: 24px; }
+    header p { margin: 0; opacity: 0.9; }
+
+    .grid-indicadores {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .metric-card {
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      border-top: 4px solid #006633;
+    }
+
+    .metric-card h4 { margin: 0 0 10px 0; color: #555; font-size: 14px; }
+    .metric-card .number { font-size: 28px; font-weight: bold; color: #006633; }
+
+    .table-container {
+      background: white;
+      padding: 20px;
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background-color: #f8f9fa;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .badge-roja { background: #ffebee; color: #c62828; }
+    .badge-amarilla { background: #fffde7; color: #f57f17; }
+    .badge-verde { background: #e8f5e9; color: #2e7d32; }
+    .badge-azul { background: #e3f2fd; color: #1565c0; }
+
+    .btn-refresh {
+      background-color: #006633;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      float: right;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <button class="btn-refresh" onclick="cargarDatos()">Actualizar Datos</button>
+    <h1>Panel del Facilitador — Semiótica</h1>
+    <p>Monitoreo de diagnósticos, promedios por indicador y rutas adaptativas asignadas</p>
+  </header>
+
+  <!-- Métricas de Promedios -->
+  <div class="grid-indicadores">
+    <div class="metric-card">
+      <h4>Promedio Bloque A</h4>
+      <div class="number" id="prom-a">0.0</div>
+      <small>Conceptos Fundamentales</small>
+    </div>
+    <div class="metric-card">
+      <h4>Promedio Bloque B</h4>
+      <div class="number" id="prom-b">0.0</div>
+      <small>Producción de Sentido</small>
+    </div>
+    <div class="metric-card">
+      <h4>Promedio Bloque C</h4>
+      <div class="number" id="prom-c">0.0</div>
+      <small>Medios y Cultura</small>
+    </div>
+    <div class="metric-card">
+      <h4>Promedio Bloque D</h4>
+      <div class="number" id="prom-d">0.0</div>
+      <small>Ideología y Mito</small>
+    </div>
+  </div>
+
+  <!-- Tabla de Estudiantes -->
+  <div class="table-container">
+    <h3>Listado de Resultados por Estudiante</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Estudiante</th>
+          <th>Correo</th>
+          <th>P. Global</th>
+          <th>Ruta A</th>
+          <th>Ruta B</th>
+          <th>Ruta C</th>
+          <th>Ruta D</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-cuerpo">
+        <tr>
+          <td colspan="8" style="text-align: center;">Cargando datos...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // CONFIGURACIÓN DE SUPABASE
+  const SUPABASE_URL = "https://bcstmyhadbnysphlernb.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_2xj9zkSLzDcbh_JT8n9khw_ifXu9Uea";
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function cargarDatos() {
+    try {
+      const { data, error } = await supabase
+        .from('respuestas_semiotica')
+        .select('*')
+        .order('fecha', { ascending: false });
+
+      if (error) {
+        console.error("Error al cargar respuestas:", error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        document.getElementById('tabla-cuerpo').innerHTML = `
+          <tr><td colspan="8" style="text-align: center;">No hay evaluaciones registradas aún.</td></tr>
+        `;
+        return;
+      }
+
+      // 1. Cálculo de Promedios
+      let sumA = 0, sumB = 0, sumC = 0, sumD = 0;
+      data.forEach(r => {
+        sumA += Number(r.puntaje_bloque_a || 0);
+        sumB += Number(r.puntaje_bloque_b || 0);
+        sumC += Number(r.puntaje_bloque_c || 0);
+        sumD += Number(r.puntaje_bloque_d || 0);
+      });
+
+      const total = data.length;
+      document.getElementById('prom-a').innerText = (sumA / total).toFixed(1);
+      document.getElementById('prom-b').innerText = (sumB / total).toFixed(1);
+      document.getElementById('prom-c').innerText = (sumC / total).toFixed(1);
+      document.getElementById('prom-d').innerText = (sumD / total).toFixed(1);
+
+      // 2. Renderizado de Tabla
+      const tbody = document.getElementById('tabla-cuerpo');
+      tbody.innerHTML = '';
+
+      data.forEach(est => {
+        const fechaFormat = new Date(est.fecha).toLocaleString('es-CO');
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td><strong>${est.nombre}</strong></td>
+          <td>${est.correo}</td>
+          <td><strong>${Number(est.puntaje_global).toFixed(1)}</strong></td>
+          <td>${getBadge(est.ruta_bloque_a)}</td>
+          <td>${getBadge(est.ruta_bloque_b)}</td>
+          <td>${getBadge(est.ruta_bloque_c)}</td>
+          <td>${getBadge(est.ruta_bloque_d)}</td>
+          <td><small>${fechaFormat}</small></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+    } catch (err) {
+      console.error("Excepción en la carga de datos:", err);
+    }
+  }
+
+  function getBadge(rutaStr) {
+    if (!rutaStr) return '-';
+    if (rutaStr.includes('Roja')) return `<span class="badge badge-roja">${rutaStr}</span>`;
+    if (rutaStr.includes('Amarilla')) return `<span class="badge badge-amarilla">${rutaStr}</span>`;
+    if (rutaStr.includes('Verde')) return `<span class="badge badge-verde">${rutaStr}</span>`;
+    if (rutaStr.includes('Azul')) return `<span class="badge badge-azul">${rutaStr}</span>`;
+    return `<span class="badge">${rutaStr}</span>`;
+  }
+
+  // Cargar datos al abrir la página
+  cargarDatos();
+</script>
+
+</body>
+</html>
